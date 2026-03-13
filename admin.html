@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="stylesheet" href="common/style.css">
+</head>
+
+<body>
+
+<h2>Admin Dashboard</h2>
+
+<table border="1">
+
+<thead>
+
+<tr>
+<th>Farmer</th>
+<th>Phone</th>
+<th>Crop</th>
+<th>Area</th>
+<th>Water</th>
+<th>Time</th>
+</tr>
+
+</thead>
+
+<tbody id="farmers"></tbody>
+
+</table>
+
+<script>
+
+fetch("/api/farmers")
+.then(res=>res.json())
+.then(data=>{
+
+let rows=""
+
+data.forEach(f=>{
+
+rows+=`
+
+<tr>
+<td>${f.name}</td>
+<td>${f.phone}</td>
+<td>${f.crop}</td>
+<td>${f.area}</td>
+<td>${f.water}</td>
+<td>${f.time}</td>
+</tr>
+
+`
+
+})
+
+document.getElementById("farmers").innerHTML=rows
+
+})
+
+</script>
+
+</body>
+</html>

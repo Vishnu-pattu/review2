@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="stylesheet" href="common/style.css">
+<script src="common/app.js"></script>
+</head>
+
+<body>
+
+<h2 id="selectLang">Select Language</h2>
+
+<select id="language" onchange="changeLanguage()">
+<option value="en">English</option>
+<option value="ta">Tamil</option>
+<option value="hi">Hindi</option>
+</select>
+
+<h2 id="farmerDetails">Farmer Details</h2>
+
+<input id="name" placeholder="Farmer Name">
+<input id="phone" placeholder="Phone Number">
+<input id="email" placeholder="Email">
+
+<button id="nextBtn" onclick="saveFarmer()">Next</button>
+
+</body>
+</html>
