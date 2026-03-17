@@ -1,0 +1,451 @@
+// =====================================
+// SMART IRRIGATION SYSTEM
+// COMMON JAVASCRIPT FILE
+// client/common/app.js
+// =====================================
+
+
+// =====================================
+// GLOBAL VARIABLES
+// =====================================
+
+let map
+let marker
+let irrigationChart = null
+
+
+// =====================================
+// LANGUAGE TRANSLATIONS
+// =====================================
+
+const translations = {
+
+en:{
+selectLang:"Select Language",
+farmerDetails:"Farmer Details",
+nextBtn:"Next",
+farmerName:"Farmer Name",
+phone:"Phone Number",
+email:"Email",
+
+locationTitle:"Farm Location",
+district:"District",
+village:"Village",
+latitude:"Latitude",
+longitude:"Longitude",
+
+findBtn:"Find My Location",
+villageBtn:"Find From District & Village",
+
+cropTitle:"Crop Details",
+cropLabel:"Crop Type",
+soilLabel:"Soil Type",
+irrigationLabel:"Irrigation Method",
+area:"Area",
+analyzeBtn:"Analyze Irrigation",
+
+results:{
+water:"Water Required",
+rain:"Rainfall Contribution",
+flow:"Flow Rate",
+duration:"Duration",
+start:"Start Time",
+end:"End Time"
+},
+
+crops:["Rice","Wheat","Maize","Sugarcane","Cotton","Banana","Tomato"],
+soils:["Clay","Sandy","Loamy","Red","Black"],
+methods:["Flood","Surface","Subsurface","Sprinkler","Drip"]
+},
+
+ta:{
+selectLang:"மொழியை தேர்வு செய்யவும்",
+farmerDetails:"விவசாயி விவரங்கள்",
+nextBtn:"அடுத்து",
+farmerName:"விவசாயி பெயர்",
+phone:"தொலைபேசி எண்",
+email:"மின்னஞ்சல்",
+
+locationTitle:"பண்ணை இருப்பிடம்",
+district:"மாவட்டம்",
+village:"கிராமம்",
+latitude:"அகலம்",
+longitude:"நீளம்",
+
+findBtn:"என் இருப்பிடத்தை கண்டறி",
+villageBtn:"மாவட்டம் மற்றும் கிராமத்திலிருந்து கண்டறி",
+
+cropTitle:"பயிர் விவரங்கள்",
+cropLabel:"பயிர் வகை",
+soilLabel:"மண் வகை",
+irrigationLabel:"பாசன முறை",
+area:"பரப்பளவு",
+analyzeBtn:"பாசனத்தை பகுப்பாய்வு செய்",
+
+results:{
+water:"தேவையான நீர்",
+rain:"மழை பங்களிப்பு",
+flow:"நீர் ஓட்டம்",
+duration:"நேரம்",
+start:"தொடக்க நேரம்",
+end:"முடிவு நேரம்"
+},
+
+crops:["அரிசி","கோதுமை","மக்காச்சோளம்","கரும்பு","பருத்தி","வாழை","தக்காளி"],
+soils:["களிமண்","மணல் மண்","கருமண்","சிவப்பு மண்","கரி மண்"],
+methods:["வெள்ளப்பாசனம்","மேற்பரப்பு","அடிப்பரப்பு","தூவிச் பாசனம்","டிரிப்"]
+},
+
+hi:{
+selectLang:"भाषा चुनें",
+farmerDetails:"किसान विवरण",
+nextBtn:"अगला",
+farmerName:"किसान का नाम",
+phone:"फोन नंबर",
+email:"ईमेल",
+
+locationTitle:"खेत का स्थान",
+district:"जिला",
+village:"गांव",
+latitude:"अक्षांश",
+longitude:"देशांतर",
+
+findBtn:"मेरा स्थान खोजें",
+villageBtn:"जिला और गांव से स्थान खोजें",
+
+cropTitle:"फसल विवरण",
+cropLabel:"फसल का प्रकार",
+soilLabel:"मिट्टी का प्रकार",
+irrigationLabel:"सिंचाई विधि",
+area:"क्षेत्रफल",
+analyzeBtn:"सिंचाई का विश्लेषण करें",
+
+results:{
+water:"आवश्यक पानी",
+rain:"वर्षा योगदान",
+flow:"जल प्रवाह",
+duration:"अवधि",
+start:"शुरू समय",
+end:"समाप्त समय"
+},
+
+crops:["चावल","गेहूं","मक्का","गन्ना","कपास","केला","टमाटर"],
+soils:["चिकनी मिट्टी","रेतीली मिट्टी","दोमट मिट्टी","लाल मिट्टी","काली मिट्टी"],
+methods:["बाढ़ सिंचाई","सतही सिंचाई","भूमिगत सिंचाई","स्प्रिंकलर","ड्रिप"]
+}
+
+}
+
+
+// =====================================
+// CHANGE LANGUAGE
+// =====================================
+
+function changeLanguage(){
+
+const lang=document.getElementById("language").value
+localStorage.setItem("lang",lang)
+applyLanguage(lang)
+
+}
+
+
+// =====================================
+// APPLY LANGUAGE
+// =====================================
+
+function applyLanguage(lang){
+
+const t=translations[lang]
+if(!t) return
+
+setText("selectLang",t.selectLang)
+setText("farmerDetails",t.farmerDetails)
+setText("nextBtn",t.nextBtn)
+
+setPlaceholder("name",t.farmerName)
+setPlaceholder("phone",t.phone)
+setPlaceholder("email",t.email)
+
+setText("locationTitle",t.locationTitle)
+
+setPlaceholder("district",t.district)
+setPlaceholder("village",t.village)
+setPlaceholder("lat",t.latitude)
+setPlaceholder("lng",t.longitude)
+
+setText("findBtn",t.findBtn)
+setText("villageBtn",t.villageBtn)
+
+setText("cropTitle",t.cropTitle)
+setText("cropLabel",t.cropLabel)
+setText("soilLabel",t.soilLabel)
+setText("irrigationLabel",t.irrigationLabel)
+setText("analyzeBtn",t.analyzeBtn)
+
+updateDropdown("crop",t.crops,translations.en.crops)
+updateDropdown("soil",t.soils,translations.en.soils)
+updateDropdown("irrigation",t.methods,translations.en.methods)
+
+}
+
+
+// =====================================
+// HELPER FUNCTIONS
+// =====================================
+
+function setText(id,text){
+const el=document.getElementById(id)
+if(el) el.innerText=text
+}
+
+function setPlaceholder(id,text){
+const el=document.getElementById(id)
+if(el) el.placeholder=text
+}
+
+function updateDropdown(id,textList,valueList){
+
+const select=document.getElementById(id)
+if(!select) return
+
+select.innerHTML=""
+
+for(let i=0;i<textList.length;i++){
+
+let option=document.createElement("option")
+
+option.text=textList[i]
+option.value=valueList[i]
+
+select.appendChild(option)
+
+}
+
+}
+
+
+// =====================================
+// LOAD LANGUAGE
+// =====================================
+
+document.addEventListener("DOMContentLoaded",function(){
+
+const savedLang=localStorage.getItem("lang") || "en"
+applyLanguage(savedLang)
+
+if(document.getElementById("language"))
+document.getElementById("language").value=savedLang
+
+})
+
+
+// =====================================
+// SAVE FARMER
+// =====================================
+
+function saveFarmer(){
+
+localStorage.setItem("farmerName",document.getElementById("name").value)
+localStorage.setItem("phone",document.getElementById("phone").value)
+localStorage.setItem("email",document.getElementById("email").value)
+
+window.location.href="farmMap.html"
+
+}
+
+
+// =====================================
+// MAP INITIALIZATION
+// =====================================
+
+function initMap(){
+
+if(!document.getElementById("map")) return
+
+map=L.map("map").setView([11.1271,78.6569],7)
+
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map)
+
+map.on("click",function(e){
+
+let lat=e.latlng.lat
+let lng=e.latlng.lng
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+placeMarker(lat,lng)
+
+})
+
+}
+
+window.addEventListener("load",initMap)
+
+
+// =====================================
+// PLACE MARKER
+// =====================================
+
+function placeMarker(lat,lng){
+
+if(marker){
+map.removeLayer(marker)
+}
+
+marker=L.marker([lat,lng]).addTo(map)
+
+}
+
+
+// =====================================
+// FIND GPS LOCATION
+// =====================================
+
+function findLocation(){
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(function(position){
+
+let lat=position.coords.latitude
+let lng=position.coords.longitude
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+map.setView([lat,lng],13)
+
+placeMarker(lat,lng)
+
+})
+
+}else{
+
+alert("Geolocation not supported")
+
+}
+
+}
+
+
+// =====================================
+// FIND LOCATION FROM DISTRICT + VILLAGE
+// =====================================
+
+function findFromVillage(){
+
+let district=document.getElementById("district").value
+let village=document.getElementById("village").value
+
+if(!district || !village){
+alert("Enter District and Village")
+return
+}
+
+let location=village+","+district+",Tamil Nadu,India"
+
+let url="https://nominatim.openstreetmap.org/search?format=json&q="+location
+
+fetch(url)
+.then(res=>res.json())
+.then(data=>{
+
+if(data.length==0){
+alert("Location not found")
+return
+}
+
+let lat=parseFloat(data[0].lat)
+let lng=parseFloat(data[0].lon)
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+map.setView([lat,lng],13)
+
+placeMarker(lat,lng)
+
+})
+
+}
+
+
+// =====================================
+// SAVE LOCATION
+// =====================================
+
+function saveLocation(){
+
+localStorage.setItem("district",document.getElementById("district").value)
+localStorage.setItem("village",document.getElementById("village").value)
+localStorage.setItem("lat",document.getElementById("lat").value)
+localStorage.setItem("lng",document.getElementById("lng").value)
+
+window.location.href="farmerPanel.html"
+
+}
+
+
+// =====================================
+// IRRIGATION ANALYSIS
+// =====================================
+
+function analyze(){
+
+let lang=localStorage.getItem("lang") || "en"
+let label=translations[lang].results
+
+let crop=document.getElementById("crop").value
+let soil=document.getElementById("soil").value
+let irrigation=document.getElementById("irrigation").value
+let area=parseFloat(document.getElementById("area").value)
+
+if(isNaN(area)||area<=0){
+alert("Enter valid area")
+return
+}
+
+const CWR={Rice:8,Wheat:6,Maize:5,Sugarcane:9,Cotton:7,Banana:10,Tomato:6}
+const SRR={Clay:0.9,Sandy:0.4,Loamy:0.7,Red:0.6,Black:0.8}
+const efficiency={Flood:0.5,Surface:0.6,Subsurface:0.75,Sprinkler:0.8,Drip:0.9}
+
+let rainfall=20
+
+let water=((CWR[crop]*area)-(SRR[soil]*rainfall))/efficiency[irrigation]
+
+if(isNaN(water)||water<0) water=0
+water=Math.round(water)
+
+let flowRate=20
+let duration=Math.max(1,Math.round(water/flowRate))
+
+let rainfallContribution=SRR[soil]*rainfall
+
+let startTime=new Date()
+let endTime=new Date(startTime.getTime()+duration*60000)
+
+function formatTime(date){
+let h=date.getHours()
+let m=date.getMinutes()
+let ampm=h>=12?"PM":"AM"
+h=h%12
+h=h?h:12
+m=m<10?"0"+m:m
+return h+":"+m+" "+ampm
+}
+
+let startFormatted=formatTime(startTime)
+let endFormatted=formatTime(endTime)
+
+document.getElementById("result").innerHTML=
+
+"💧 "+label.water+" : "+water+" Liters <br>"+
+"🌧 "+label.rain+" : "+rainfallContribution.toFixed(1)+" mm <br>"+
+"🚿 "+label.flow+" : "+flowRate+" L/min <br>"+
+"⏱ "+label.duration+" : "+duration+" minutes <br>"+
+"🟢 "+label.start+" : "+startFormatted+" <br>"+
+"🔴 "+label.end+" : "+endFormatted
+
+}
