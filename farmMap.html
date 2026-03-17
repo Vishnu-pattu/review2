@@ -3,6 +3,8 @@
 
 <head>
 
+<meta charset="UTF-8">
+
 <link rel="stylesheet" href="common/style.css">
 
 <link rel="stylesheet"
@@ -16,6 +18,13 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <body>
 
+<!-- LANGUAGE SELECT -->
+<select id="language" onchange="changeLanguage()">
+<option value="en">English</option>
+<option value="ta">தமிழ்</option>
+<option value="hi">हिंदी</option>
+</select>
+
 <h2 id="locationTitle">Farm Location</h2>
 
 <input id="district" placeholder="District">
@@ -24,11 +33,15 @@ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <input id="lat" placeholder="Latitude">
 <input id="lng" placeholder="Longitude">
 
-<br>
+<br><br>
 
 <button onclick="findLocation()" id="findBtn">Find My Location</button>
 
-<div id="map"></div>
+<br><br>
+
+<div id="map" style="height:400px"></div>
+
+<br>
 
 <button onclick="saveLocation()" id="nextBtn">Next</button>
 
@@ -40,7 +53,8 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map)
 
 let marker
 
-// click map to set location
+
+// CLICK MAP LOCATION
 map.on("click",function(e){
 
 let lat=e.latlng.lat
@@ -57,7 +71,8 @@ marker=L.marker([lat,lng]).addTo(map)
 
 })
 
-// find GPS location
+
+// FIND GPS LOCATION
 function findLocation(){
 
 if(navigator.geolocation){
