@@ -102,9 +102,13 @@ methods:["बाढ़ सिंचाई","सतही सिंचाई","�
 // =====================================
 
 function changeLanguage(){
+
 const lang=document.getElementById("language").value
+
 localStorage.setItem("lang",lang)
+
 applyLanguage(lang)
+
 }
 
 
@@ -116,27 +120,64 @@ function applyLanguage(lang){
 
 const t=translations[lang]
 
-if(document.getElementById("selectLang"))
-document.getElementById("selectLang").innerText=t.selectLang
+if(!t) return
 
-if(document.getElementById("farmerDetails"))
-document.getElementById("farmerDetails").innerText=t.farmerDetails
 
-if(document.getElementById("nextBtn"))
-document.getElementById("nextBtn").innerText=t.nextBtn
+// HEADINGS
+setText("selectLang",t.selectLang)
+setText("farmerDetails",t.farmerDetails)
+setText("nextBtn",t.nextBtn)
 
-if(document.getElementById("name"))
-document.getElementById("name").placeholder=t.farmerName
 
-if(document.getElementById("phone"))
-document.getElementById("phone").placeholder=t.phone
+// INPUT PLACEHOLDERS
+setPlaceholder("name",t.farmerName)
+setPlaceholder("phone",t.phone)
+setPlaceholder("email",t.email)
 
-if(document.getElementById("email"))
-document.getElementById("email").placeholder=t.email
+
+// LOCATION PAGE
+setText("locationTitle",t.locationTitle)
+
+setPlaceholder("district",t.district)
+setPlaceholder("village",t.village)
+setPlaceholder("lat",t.latitude)
+setPlaceholder("lng",t.longitude)
+
+setText("findBtn",t.findBtn)
+
+
+// CROP PAGE
+setText("cropTitle",t.cropTitle)
+setText("cropLabel",t.cropLabel)
+setText("soilLabel",t.soilLabel)
+setText("irrigationLabel",t.irrigationLabel)
+setText("analyzeBtn",t.analyzeBtn)
 
 updateDropdown("crop",t.crops)
 updateDropdown("soil",t.soils)
 updateDropdown("irrigation",t.methods)
+
+}
+
+
+// =====================================
+// SAFE TEXT SETTER
+// =====================================
+
+function setText(id,text){
+
+const el=document.getElementById(id)
+
+if(el) el.innerText=text
+
+}
+
+
+function setPlaceholder(id,text){
+
+const el=document.getElementById(id)
+
+if(el) el.placeholder=text
 
 }
 
@@ -148,15 +189,20 @@ updateDropdown("irrigation",t.methods)
 function updateDropdown(id,list){
 
 const select=document.getElementById(id)
+
 if(!select) return
 
 select.innerHTML=""
 
 list.forEach(item=>{
+
 let option=document.createElement("option")
+
 option.text=item
 option.value=item
+
 select.appendChild(option)
+
 })
 
 }
@@ -166,15 +212,16 @@ select.appendChild(option)
 // LOAD LANGUAGE
 // =====================================
 
-window.onload=function(){
+document.addEventListener("DOMContentLoaded",function(){
 
 const savedLang=localStorage.getItem("lang") || "en"
+
 applyLanguage(savedLang)
 
 if(document.getElementById("language"))
 document.getElementById("language").value=savedLang
 
-}
+})
 
 
 // =====================================
