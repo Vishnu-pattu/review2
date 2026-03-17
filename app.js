@@ -5,7 +5,6 @@
 // =====================================
 
 
-
 // =====================================
 // LANGUAGE TRANSLATIONS
 // =====================================
@@ -40,7 +39,6 @@ methods:["Flood","Surface","Subsurface","Sprinkler","Drip"]
 },
 
 
-
 ta:{
 selectLang:"மொழியை தேர்வு செய்யவும்",
 farmerDetails:"விவசாயி விவரங்கள்",
@@ -67,7 +65,6 @@ crops:["அரிசி","கோதுமை","மக்காச்சோளம
 soils:["களிமண்","மணல் மண்","கருமண்","சிவப்பு மண்","கரி மண்"],
 methods:["வெள்ளப்பாசனம்","மேற்பரப்பு","அடிப்பரப்பு","தூவிச் பாசனம்","டிரிப்"]
 },
-
 
 
 hi:{
@@ -100,31 +97,24 @@ methods:["बाढ़ सिंचाई","सतही सिंचाई","�
 }
 
 
-
 // =====================================
 // CHANGE LANGUAGE
 // =====================================
 
 function changeLanguage(){
-
 const lang=document.getElementById("language").value
 localStorage.setItem("lang",lang)
-
 applyLanguage(lang)
-
 }
 
 
-
 // =====================================
-// APPLY LANGUAGE TO PAGE
+// APPLY LANGUAGE
 // =====================================
 
 function applyLanguage(lang){
 
 const t=translations[lang]
-
-// TEXT LABELS
 
 if(document.getElementById("selectLang"))
 document.getElementById("selectLang").innerText=t.selectLang
@@ -144,54 +134,6 @@ document.getElementById("phone").placeholder=t.phone
 if(document.getElementById("email"))
 document.getElementById("email").placeholder=t.email
 
-
-
-// LOCATION PAGE
-
-if(document.getElementById("locationTitle"))
-document.getElementById("locationTitle").innerText=t.locationTitle
-
-if(document.getElementById("district"))
-document.getElementById("district").placeholder=t.district
-
-if(document.getElementById("village"))
-document.getElementById("village").placeholder=t.village
-
-if(document.getElementById("lat"))
-document.getElementById("lat").placeholder=t.latitude
-
-if(document.getElementById("lng"))
-document.getElementById("lng").placeholder=t.longitude
-
-if(document.getElementById("findBtn"))
-document.getElementById("findBtn").innerText=t.findBtn
-
-
-
-// CROP PAGE
-
-if(document.getElementById("cropTitle"))
-document.getElementById("cropTitle").innerText=t.cropTitle
-
-if(document.getElementById("cropLabel"))
-document.getElementById("cropLabel").innerText=t.cropLabel
-
-if(document.getElementById("soilLabel"))
-document.getElementById("soilLabel").innerText=t.soilLabel
-
-if(document.getElementById("irrigationLabel"))
-document.getElementById("irrigationLabel").innerText=t.irrigationLabel
-
-if(document.getElementById("analyzeBtn"))
-document.getElementById("analyzeBtn").innerText=t.analyzeBtn
-
-if(document.getElementById("area"))
-document.getElementById("area").placeholder=t.area
-
-
-
-// UPDATE DROPDOWNS
-
 updateDropdown("crop",t.crops)
 updateDropdown("soil",t.soils)
 updateDropdown("irrigation",t.methods)
@@ -199,41 +141,34 @@ updateDropdown("irrigation",t.methods)
 }
 
 
-
 // =====================================
-// UPDATE DROPDOWN OPTIONS
+// UPDATE DROPDOWNS
 // =====================================
 
 function updateDropdown(id,list){
 
 const select=document.getElementById(id)
-
 if(!select) return
 
 select.innerHTML=""
 
 list.forEach(item=>{
-
 let option=document.createElement("option")
 option.text=item
 option.value=item
-
 select.appendChild(option)
-
 })
 
 }
 
 
-
 // =====================================
-// LOAD SAVED LANGUAGE
+// LOAD LANGUAGE
 // =====================================
 
 window.onload=function(){
 
 const savedLang=localStorage.getItem("lang") || "en"
-
 applyLanguage(savedLang)
 
 if(document.getElementById("language"))
@@ -242,9 +177,8 @@ document.getElementById("language").value=savedLang
 }
 
 
-
 // =====================================
-// SAVE FARMER DETAILS
+// SAVE FARMER
 // =====================================
 
 function saveFarmer(){
@@ -258,9 +192,8 @@ window.location.href="farmMap.html"
 }
 
 
-
 // =====================================
-// SAVE FARM LOCATION
+// SAVE LOCATION
 // =====================================
 
 function saveLocation(){
@@ -275,75 +208,105 @@ window.location.href="farmerPanel.html"
 }
 
 
-
 // =====================================
 // IRRIGATION ANALYSIS
 // =====================================
+
+let irrigationChart=null
 
 function analyze(){
 
 let crop=document.getElementById("crop").value
 let soil=document.getElementById("soil").value
 let irrigation=document.getElementById("irrigation").value
-let area=document.getElementById("area").value
+let area=parseFloat(document.getElementById("area").value)
 
-let water=area*1000
+if(isNaN(area)){
+alert("Enter valid area")
+return
+}
 
-document.getElementById("result").innerText=
-"Water Requirement : "+water+" Liters"
+
+// Tamil → English mapping
+const cropMap={
+"அரிசி":"Rice","கோதுமை":"Wheat","மக்காச்சோளம்":"Maize",
+"கரும்பு":"Sugarcane","பருத்தி":"Cotton","வாழை":"Banana","தக்காளி":"Tomato"
+}
+
+const soilMap={
+"களிமண்":"Clay","மணல் மண்":"Sandy","கருமண்":"Loamy","சிவப்பு மண்":"Red","கரி மண்":"Black"
+}
+
+const irrigationMap={
+"வெள்ளப்பாசனம்":"Flood","மேற்பரப்பு":"Surface","அடிப்பரப்பு":"Subsurface",
+"தூவிச் பாசனம்":"Sprinkler","டிரிப்":"Drip"
+}
+
+crop=cropMap[crop]||crop
+soil=soilMap[soil]||soil
+irrigation=irrigationMap[irrigation]||irrigation
 
 
-// CHART
+const CWR={Rice:8,Wheat:6,Maize:5,Sugarcane:9,Cotton:7,Banana:10,Tomato:6}
+const SRR={Clay:0.9,Sandy:0.4,Loamy:0.7,Red:0.6,Black:0.8}
+const efficiency={Flood:0.5,Surface:0.6,Subsurface:0.75,Sprinkler:0.8,Drip:0.9}
 
-new Chart(document.getElementById("chart"),{
+let rainfall=20
+
+let water=((CWR[crop]*area)-(SRR[soil]*rainfall))/efficiency[irrigation]
+
+if(water<0) water=0
+water=Math.round(water)
+
+let flowRate=20
+let duration=Math.max(10,Math.round(water/flowRate))
+
+let startTime="6:00 AM"
+let endMinute=duration%60
+let endHour=6+Math.floor(duration/60)
+
+let endTime=endHour+":"+endMinute+" AM"
+
+let rainfallContribution=SRR[soil]*rainfall
+let irrigationWater=Math.max(0,water-rainfallContribution)
+
+
+// RESULT
+
+document.getElementById("result").innerHTML=
+
+"💧 Water Required : "+water+" Liters <br>"+
+"🌧 Rainfall Contribution : "+rainfallContribution.toFixed(1)+" mm <br>"+
+"🚿 Flow Rate : "+flowRate+" L/min <br>"+
+"⏱ Duration : "+duration+" minutes <br>"+
+"🕕 Irrigation Time : "+startTime+" to "+endTime
+
+
+
+// PIE CHART
+
+if(irrigationChart){
+irrigationChart.destroy()
+}
+
+const ctx=document.getElementById("chart").getContext("2d")
+
+irrigationChart=new Chart(ctx,{
 
 type:"pie",
 
 data:{
-labels:["Water","Soil Moisture"],
+labels:["Irrigation Water","Rainfall Support","Duration","Flow Rate"],
 datasets:[{
-data:[water,100]
+data:[irrigationWater,rainfallContribution,duration,flowRate],
+backgroundColor:["#3498db","#2ecc71","#f39c12","#9b59b6"]
 }]
-}
-
-})
-
-
-
-// SEND DATA TO BACKEND
-
-fetch("/api/schedule",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
 },
 
-body:JSON.stringify({
-
-name:localStorage.getItem("farmerName"),
-phone:localStorage.getItem("phone"),
-email:localStorage.getItem("email"),
-
-district:localStorage.getItem("district"),
-village:localStorage.getItem("village"),
-
-latitude:localStorage.getItem("lat"),
-longitude:localStorage.getItem("lng"),
-
-crop:crop,
-soil:soil,
-method:irrigation,
-area:area
-
-})
-
-})
-.then(res=>res.json())
-.then(data=>{
-
-console.log("Server Response:",data)
+options:{
+responsive:false,
+plugins:{legend:{position:"bottom"}}
+}
 
 })
 
