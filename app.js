@@ -6,6 +6,15 @@
 
 
 // =====================================
+// GLOBAL VARIABLES
+// =====================================
+
+let map
+let marker
+let irrigationChart = null
+
+
+// =====================================
 // LANGUAGE TRANSLATIONS
 // =====================================
 
@@ -24,7 +33,9 @@ district:"District",
 village:"Village",
 latitude:"Latitude",
 longitude:"Longitude",
+
 findBtn:"Find My Location",
+villageBtn:"Find From District & Village",
 
 cropTitle:"Crop Details",
 cropLabel:"Crop Type",
@@ -37,7 +48,6 @@ crops:["Rice","Wheat","Maize","Sugarcane","Cotton","Banana","Tomato"],
 soils:["Clay","Sandy","Loamy","Red","Black"],
 methods:["Flood","Surface","Subsurface","Sprinkler","Drip"]
 },
-
 
 ta:{
 selectLang:"மொழியை தேர்வு செய்யவும்",
@@ -52,7 +62,9 @@ district:"மாவட்டம்",
 village:"கிராமம்",
 latitude:"அகலம்",
 longitude:"நீளம்",
+
 findBtn:"என் இருப்பிடத்தை கண்டறி",
+villageBtn:"மாவட்டம் மற்றும் கிராமத்திலிருந்து கண்டறி",
 
 cropTitle:"பயிர் விவரங்கள்",
 cropLabel:"பயிர் வகை",
@@ -65,7 +77,6 @@ crops:["அரிசி","கோதுமை","மக்காச்சோளம
 soils:["களிமண்","மணல் மண்","கருமண்","சிவப்பு மண்","கரி மண்"],
 methods:["வெள்ளப்பாசனம்","மேற்பரப்பு","அடிப்பரப்பு","தூவிச் பாசனம்","டிரிப்"]
 },
-
 
 hi:{
 selectLang:"भाषा चुनें",
@@ -80,7 +91,9 @@ district:"जिला",
 village:"गांव",
 latitude:"अक्षांश",
 longitude:"देशांतर",
+
 findBtn:"मेरा स्थान खोजें",
+villageBtn:"जिला और गांव से स्थान खोजें",
 
 cropTitle:"फसल विवरण",
 cropLabel:"फसल का प्रकार",
@@ -104,9 +117,7 @@ methods:["बाढ़ सिंचाई","सतही सिंचाई","�
 function changeLanguage(){
 
 const lang=document.getElementById("language").value
-
 localStorage.setItem("lang",lang)
-
 applyLanguage(lang)
 
 }
@@ -119,23 +130,16 @@ applyLanguage(lang)
 function applyLanguage(lang){
 
 const t=translations[lang]
-
 if(!t) return
 
-
-// HEADINGS
 setText("selectLang",t.selectLang)
 setText("farmerDetails",t.farmerDetails)
 setText("nextBtn",t.nextBtn)
 
-
-// INPUT PLACEHOLDERS
 setPlaceholder("name",t.farmerName)
 setPlaceholder("phone",t.phone)
 setPlaceholder("email",t.email)
 
-
-// LOCATION PAGE
 setText("locationTitle",t.locationTitle)
 
 setPlaceholder("district",t.district)
@@ -144,66 +148,52 @@ setPlaceholder("lat",t.latitude)
 setPlaceholder("lng",t.longitude)
 
 setText("findBtn",t.findBtn)
+setText("villageBtn",t.villageBtn)
 
-
-// CROP PAGE
 setText("cropTitle",t.cropTitle)
 setText("cropLabel",t.cropLabel)
 setText("soilLabel",t.soilLabel)
 setText("irrigationLabel",t.irrigationLabel)
 setText("analyzeBtn",t.analyzeBtn)
 
-updateDropdown("crop",t.crops)
-updateDropdown("soil",t.soils)
-updateDropdown("irrigation",t.methods)
+updateDropdown("crop",t.crops,translations.en.crops)
+updateDropdown("soil",t.soils,translations.en.soils)
+updateDropdown("irrigation",t.methods,translations.en.methods)
 
 }
 
 
 // =====================================
-// SAFE TEXT SETTER
+// HELPER FUNCTIONS
 // =====================================
 
 function setText(id,text){
-
 const el=document.getElementById(id)
-
 if(el) el.innerText=text
-
 }
-
 
 function setPlaceholder(id,text){
-
 const el=document.getElementById(id)
-
 if(el) el.placeholder=text
-
 }
 
-
-// =====================================
-// UPDATE DROPDOWNS
-// =====================================
-
-function updateDropdown(id,list){
+function updateDropdown(id,textList,valueList){
 
 const select=document.getElementById(id)
-
 if(!select) return
 
 select.innerHTML=""
 
-list.forEach(item=>{
+for(let i=0;i<textList.length;i++){
 
 let option=document.createElement("option")
 
-option.text=item
-option.value=item
+option.text=textList[i]
+option.value=valueList[i]
 
 select.appendChild(option)
 
-})
+}
 
 }
 
@@ -215,7 +205,6 @@ select.appendChild(option)
 document.addEventListener("DOMContentLoaded",function(){
 
 const savedLang=localStorage.getItem("lang") || "en"
-
 applyLanguage(savedLang)
 
 if(document.getElementById("language"))
@@ -240,6 +229,123 @@ window.location.href="farmMap.html"
 
 
 // =====================================
+// MAP INITIALIZATION
+// =====================================
+
+function initMap(){
+
+if(!document.getElementById("map")) return
+
+map=L.map("map").setView([11.1271,78.6569],7)
+
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map)
+
+map.on("click",function(e){
+
+let lat=e.latlng.lat
+let lng=e.latlng.lng
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+placeMarker(lat,lng)
+
+})
+
+}
+
+window.addEventListener("load",initMap)
+
+
+// =====================================
+// PLACE MARKER
+// =====================================
+
+function placeMarker(lat,lng){
+
+if(marker){
+map.removeLayer(marker)
+}
+
+marker=L.marker([lat,lng]).addTo(map)
+
+}
+
+
+// =====================================
+// FIND GPS LOCATION
+// =====================================
+
+function findLocation(){
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(function(position){
+
+let lat=position.coords.latitude
+let lng=position.coords.longitude
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+map.setView([lat,lng],13)
+
+placeMarker(lat,lng)
+
+})
+
+}else{
+
+alert("Geolocation not supported")
+
+}
+
+}
+
+
+// =====================================
+// FIND LOCATION FROM DISTRICT + VILLAGE
+// =====================================
+
+function findFromVillage(){
+
+let district=document.getElementById("district").value
+let village=document.getElementById("village").value
+
+if(!district || !village){
+alert("Enter District and Village")
+return
+}
+
+let location=village+","+district+",Tamil Nadu,India"
+
+let url="https://nominatim.openstreetmap.org/search?format=json&q="+location
+
+fetch(url)
+.then(res=>res.json())
+.then(data=>{
+
+if(data.length==0){
+alert("Location not found")
+return
+}
+
+let lat=parseFloat(data[0].lat)
+let lng=parseFloat(data[0].lon)
+
+document.getElementById("lat").value=lat
+document.getElementById("lng").value=lng
+
+map.setView([lat,lng],13)
+
+placeMarker(lat,lng)
+
+})
+
+}
+
+
+// =====================================
 // SAVE LOCATION
 // =====================================
 
@@ -259,8 +365,6 @@ window.location.href="farmerPanel.html"
 // IRRIGATION ANALYSIS
 // =====================================
 
-let irrigationChart=null
-
 function analyze(){
 
 let crop=document.getElementById("crop").value
@@ -268,31 +372,10 @@ let soil=document.getElementById("soil").value
 let irrigation=document.getElementById("irrigation").value
 let area=parseFloat(document.getElementById("area").value)
 
-if(isNaN(area)){
+if(isNaN(area) || area<=0){
 alert("Enter valid area")
 return
 }
-
-
-// Tamil → English mapping
-const cropMap={
-"அரிசி":"Rice","கோதுமை":"Wheat","மக்காச்சோளம்":"Maize",
-"கரும்பு":"Sugarcane","பருத்தி":"Cotton","வாழை":"Banana","தக்காளி":"Tomato"
-}
-
-const soilMap={
-"களிமண்":"Clay","மணல் மண்":"Sandy","கருமண்":"Loamy","சிவப்பு மண்":"Red","கரி மண்":"Black"
-}
-
-const irrigationMap={
-"வெள்ளப்பாசனம்":"Flood","மேற்பரப்பு":"Surface","அடிப்பரப்பு":"Subsurface",
-"தூவிச் பாசனம்":"Sprinkler","டிரிப்":"Drip"
-}
-
-crop=cropMap[crop]||crop
-soil=soilMap[soil]||soil
-irrigation=irrigationMap[irrigation]||irrigation
-
 
 const CWR={Rice:8,Wheat:6,Maize:5,Sugarcane:9,Cotton:7,Banana:10,Tomato:6}
 const SRR={Clay:0.9,Sandy:0.4,Loamy:0.7,Red:0.6,Black:0.8}
@@ -302,20 +385,37 @@ let rainfall=20
 
 let water=((CWR[crop]*area)-(SRR[soil]*rainfall))/efficiency[irrigation]
 
-if(water<0) water=0
+if(isNaN(water)||water<0) water=0
 water=Math.round(water)
 
 let flowRate=20
-let duration=Math.max(10,Math.round(water/flowRate))
-
-let startTime="6:00 AM"
-let endMinute=duration%60
-let endHour=6+Math.floor(duration/60)
-
-let endTime=endHour+":"+endMinute+" AM"
+let duration=Math.max(1,Math.round(water/flowRate))
 
 let rainfallContribution=SRR[soil]*rainfall
 let irrigationWater=Math.max(0,water-rainfallContribution)
+
+
+// TIME CALCULATION
+
+let startTime=new Date()
+let endTime=new Date(startTime.getTime()+duration*60000)
+
+function formatTime(date){
+
+let h=date.getHours()
+let m=date.getMinutes()
+let ampm=h>=12?"PM":"AM"
+
+h=h%12
+h=h?h:12
+
+m=m<10?"0"+m:m
+
+return h+":"+m+" "+ampm
+}
+
+let startFormatted=formatTime(startTime)
+let endFormatted=formatTime(endTime)
 
 
 // RESULT
@@ -326,8 +426,8 @@ document.getElementById("result").innerHTML=
 "🌧 Rainfall Contribution : "+rainfallContribution.toFixed(1)+" mm <br>"+
 "🚿 Flow Rate : "+flowRate+" L/min <br>"+
 "⏱ Duration : "+duration+" minutes <br>"+
-"🕕 Irrigation Time : "+startTime+" to "+endTime
-
+"🟢 Start Time : "+startFormatted+" <br>"+
+"🔴 End Time : "+endFormatted
 
 
 // PIE CHART
